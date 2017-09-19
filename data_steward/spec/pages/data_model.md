@@ -10,6 +10,35 @@ For the purposes of goal \#1 of this data sprint, the table definitions in this 
 
 For this data sprint, the OMOP vocabulary will be required. A version of the vocabulary for the All of Us Research Program can be downloaded [here](https://drive.google.com/file/d/0B1ctb6oEtLWLWFRqYXdWclZkbWM/view?usp=sharing). Once the file is unzipped, the CSV files that contain the vocabulary can be loaded into a database. The load script and table creation files can be found in the [CommonDataModel](https://github.com/OHDSI/CommonDataModel) repo on GitHub. Additionally, for this data sprint, the concept id columns are required to be populated. Examples of how to identify the “concept\_id” fields are in the below tables. It is also recommended to view the tutorials available online for both the CDM ETL (<http://www.ohdsi.org/common-data-model-and-extract-transform-and-load-tutorial/>) and the Vocabulary (<http://www.ohdsi.org/ohdsi-standardized-vocabulary-tutorial-recordings/)>. It is important to note that not all ICD codes map to a condition. It is important to look at the domain of the concept in the OMOP Vocabulary. For example, ICD-9 CM code “V72.19” (Other examination of ears and hearing) is considered a procedure and thus should be placed in the procedure\_occurrence table. Likewise, there are other ICD codes that should be placed in other tables.
 
+# location 
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+# care site
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+# provider
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+# observation
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+# Device?
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+# Table Name TBD
+| Field                          | Required For Export     | Type     | Description |
+|:------------------------------ |: ----------------------- |: -------- |: ----------- |
+| First Name                     | Yes                     | String   | Participants first name. |
+| Middle Name           | Yes                     | string  | Participants middle name. |
+| Last Name                | Yes                     | string  | Participants last name. |
+| SSN               |                      | integer  | Social Security Number. |
+| MRN               |                      | integer  | Medical Record Number. |
+| Phone Primary               |                      | integer  | Participants primary phone number. |
+| Phone Secondary               |                      | integer  | Participants secondary phone number. |
+| Email Primary               |                      | string  | Participants primary email. |
+| Email Secondary               |                      | string  | Participants secondary email. |
+
+
 # person
 | Field                          | Required For Export     | Type     | Description |
 |:------------------------------ |: ----------------------- |: -------- |: ----------- |
