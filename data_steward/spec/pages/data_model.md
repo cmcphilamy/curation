@@ -3,12 +3,12 @@ template: page
 
 # OMOP CDM
 
-The OMOP Common Data Model (CDM) will be used to transfer EHR data to the Data Resource Core (DRC). The data model is an open-source, community standard for observational healthcare data. This document will cover the core tables that will be used to transport data to the DRC. The tables of interest for this export are: person, visit\_occurrence, condition\_occurrence, procedure\_occurrence, drug\_exposure, and measurement. All detailed information on the OMOP common data model can be found here: <http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm#common_data_model>.
+The OMOP Common Data Model (CDM) will be used to transfer EHR data to the Data Resource Core (DRC). The data model is an open-source, community standard for observational healthcare data. This document will cover the core tables that will be used to transport data to the DRC. All OMOP tables are of interest for this export.  All detailed information on the OMOP common data model can be found here: <http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm#common_data_model>.
 
-For the purposes of goal \#1 of this data sprint, the table definitions in this document are now the same as the OMOP specification in all fields for this submission. This document is based on the latest version of the OMOP CDM – version 5.1. The main change to the CDM with the latest version is the addition of the “datetime” columns to all the tables to capture time events. The columns with the name “source” refers to values from source systems. Every “source” field has two columns – source\_value and source\_concept\_id. For example, the LOINC code, 1963-8, for a bicarbonate lab would have “1963-8” for the source\_value column and “3016293” for source\_concept\_id. In cases where the HPO’s source system does not contain a standard terminology and only local codes are used, the source\_concept\_id would be “0” and the source\_value field would contain the local code and the description of the local code separated by a “:”
+This document is based on the latest version of the OMOP CDM – version 5.1. The main change to the CDM with the latest version is the addition of the “datetime” columns to all the tables to capture time events. The columns with the name “source” refers to values from source systems. Every “source” field has two columns – source\_value and source\_concept\_id. For example, the LOINC code, 1963-8, for a bicarbonate lab would have “1963-8” for the source\_value column and “3016293” for source\_concept\_id. In cases where the HPO’s source system does not contain a standard terminology and only local codes are used, the source\_concept\_id would be “0” and the source\_value field would contain the local code and the description of the local code separated by a “:”
 . For example, representing race for a local system would be “A:African American” in the race\_source\_value and the race\_concept\_id would be “0”.
 
-For this data sprint, the OMOP vocabulary will be required. A version of the vocabulary for the All of Us Research Program can be downloaded [here](https://drive.google.com/file/d/0B1ctb6oEtLWLWFRqYXdWclZkbWM/view?usp=sharing). Once the file is unzipped, the CSV files that contain the vocabulary can be loaded into a database. The load script and table creation files can be found in the [CommonDataModel](https://github.com/OHDSI/CommonDataModel) repo on GitHub. Additionally, for this data sprint, the concept id columns are required to be populated. Examples of how to identify the “concept\_id” fields are in the below tables. It is also recommended to view the tutorials available online for both the CDM ETL (<http://www.ohdsi.org/common-data-model-and-extract-transform-and-load-tutorial/>) and the Vocabulary (<http://www.ohdsi.org/ohdsi-standardized-vocabulary-tutorial-recordings/)>. It is important to note that not all ICD codes map to a condition. It is important to look at the domain of the concept in the OMOP Vocabulary. For example, ICD-9 CM code “V72.19” (Other examination of ears and hearing) is considered a procedure and thus should be placed in the procedure\_occurrence table. Likewise, there are other ICD codes that should be placed in other tables.
+OMOP vocabulary will be required. A version of the vocabulary for the All of Us Research Program can be downloaded [here](https://drive.google.com/file/d/0B1ctb6oEtLWLWFRqYXdWclZkbWM/view?usp=sharing). Once the file is unzipped, the CSV files that contain the vocabulary can be loaded into a database. The load script and table creation files can be found in the [CommonDataModel](https://github.com/OHDSI/CommonDataModel) repo on GitHub. Additionally, the concept id columns are required to be populated. Examples of how to identify the “concept\_id” fields are in the below tables. It is also recommended to view the tutorials available online for both the CDM ETL (<http://www.ohdsi.org/common-data-model-and-extract-transform-and-load-tutorial/>) and the Vocabulary (<http://www.ohdsi.org/ohdsi-standardized-vocabulary-tutorial-recordings/)>. It is important to note that not all ICD codes map to a condition. It is important to look at the domain of the concept in the OMOP Vocabulary. For example, ICD-9 CM code “V72.19” (Other examination of ears and hearing) is considered a procedure and thus should be placed in the procedure\_occurrence table. Likewise, there are other ICD codes that should be placed in other tables.
 
 # person
 
@@ -39,6 +39,47 @@ For example, an African American, non-Hispanic, male patient named John Doe born
 
     "1", "8507", "1965", "1", "1", "1965-01-02T00:00:00-05:00", "38003599", "38003564","","","","", "M:Male","", "A:African American","", "NH:Non-Hispanic",""
 
+# observation\_period
+
+Field|Required|Type|Description
+:------------------------------|:--------|:------------|:----------------------------------------------
+|observation_period_id|Yes|integer|A unique identifier for each observation period.|
+|person_id|Yes|integer|A foreign key identifier to the person for whom the observation period is defined. The demographic details of that person are stored in the person table.|
+|observation_period_start_date|Yes|date|The start date of the observation period for which data are available from the data source.|
+|observation_period_end_date|Yes|date|The end date of the observation period for which data are available from the data source.|
+|period_type_concept_id|Yes|Integer|A foreign key identifier to the predefined concept in the Standardized Vocabularies reflecting the source of the observation period information|
+
+# specimen
+
+Field|Required|Type|Description
+:-----------------------------|:--------|:------------|:------------------------------------------------------
+|specimen_id|Yes|integer|A unique identifier for each specimen.|
+|person_id|Yes|integer|A foreign key identifier to the Person for whom the Specimen is recorded.|
+|specimen_concept_id|Yes|integer|A foreign key referring to a Standard Concept identifier in the Standardized Vocabularies for the Specimen.|
+|specimen_type_concept_id|Yes|integer|A foreign key referring to the Concept identifier in the Standardized Vocabularies reflecting the system of record from which the Specimen was represented in the source data.|
+|specimen_date|Yes|date|The date the specimen was obtained from the Person.|
+|specimen_datetime|No|datetime|The date and time on the date when the Specimen was obtained from the person.|
+|quantity|No|float|The amount of specimen collection from the person during the sampling procedure.|
+|unit_concept_id|No|integer|A foreign key to a Standard Concept identifier for the Unit associated with the numeric quantity of the Specimen collection.|
+|anatomic_site_concept_id|No|integer|A foreign key to a Standard Concept identifier for the anatomic location of specimen collection.|
+|disease_status_concept_id|No|integer|A foreign key to a Standard Concept identifier for the Disease Status of specimen collection.|
+|specimen_source_id|No|varchar(50)|The Specimen identifier as it appears in the source data.|
+|specimen_source_value|No|varchar(50)|The Specimen value as it appears in the source data. This value is mapped to a Standard Concept in the Standardized Vocabularies and the original code is, stored here for reference.|
+|unit_source_value|No|varchar(50)|The information about the Unit as detailed in the source.|
+|anatomic_site_source_value|No|varchar(50)|The information about the anatomic site as detailed in the source.|
+|disease_status_source_value|No|varchar(50)|The information about the disease status as detailed in the source.|
+
+# death
+
+Field|Required|Type|Description
+:-------------------------|:--------|:-----|:----------------------------------------------
+|person_id|Yes|integer|A foreign key identifier to the deceased person. The demographic details of that person are stored in the person table.|
+|death_date |Yes|date|The date the person was deceased. If the precise date including day or month is not known or not allowed, December is used as the default month, and the last day of the month the default day.|
+|death_datetime |No|datetime|The date and time the person was deceased. If the precise date including day or month is not known or not allowed, December is used as the default month, and the last day of the month the default day.|
+|death_type_concept_id|Yes|integer|A foreign key referring to the predefined concept identifier in the Standardized Vocabularies reflecting how the death was represented in the source data.|
+|cause_concept_id|No|integer|A foreign key referring to a standard concept identifier in the Standardized Vocabularies for conditions.|
+|cause_source_value|No|varchar(50)|The source code for the cause of death as it appears in the source data. This code is mapped to a standard concept in the Standardized Vocabularies and the original code is, stored here for reference.|
+|cause_source_concept_id|No|integer|A foreign key to the concept that refers to the code used in the source. Note, this variable name is abbreviated to ensure it will be allowable across database platforms.|
 
 # visit\_occurrence
 
@@ -76,61 +117,6 @@ Clinic visit
 Amb surg visit 
 
     "4","1","9202","2016-01-01","2016-01-01T10:00:00-05:00","2016-01-01","","44818518","0","0","A:Ambulatory Surgery","0"
-
-
-# condition\_occurrence
-
-| Field                      | Required For Export     | Type     | Description |
-| -------------------------- | ----------------------- | -------- | ----------- |
-| condition\_occurrence\_id      | Yes                     | integer     | A unique identifier for each Condition Occurrence event. |
-| person\_id                     | Yes                     | integer     | A foreign key identifier to the Person who is experiencing the condition. The demographic details of that Person are stored in the PERSON table. |
-| condition\_concept\_id         | Yes                     | integer     | A standard, valid, OMOP concept ID for the associated domain. The SNOMED terminology is considered standard for the condition domain. It is often derived from the `condition_source_concept_id`. If your source data does not use SNOMED (i.e. in `condition_source_concept_id`) then they need to be translated. The query in [condition_concept_id.sql](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_concept_id.sql) demonstrates how you may go about this. |
-| condition\_start\_date         | Yes                     | date        | The date when the instance of the Condition is recorded. |
-| condition\_start\_datetime     | Yes                     | datetime    | The date and time of the start of the Condition. *See [datetime](index.html#datetime)* |
-| condition\_end\_date           | Yes                     | date        | The date when the instance of the Condition is considered to have ended. |
-| condition\_end\_datetime       | Yes                     | datetime    | The date and time when the instance of the Condition is considered to have ended. *See [datetime](index.html#datetime)* |
-| condition\_type\_concept\_id   | Yes                     | integer     | Refer to [condition_type_concept_id.csv](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_type_concept_id.csv) for the list of allowed concept_ids. |
-| stop\_reason                   | No                      | varchar(20) | The reason that the condition was no longer present, as indicated in the source data. |
-| provider\_id                   | No                      | integer     | Set to 0 for this data sprint. |
-| visit\_occurrence\_id          | Yes                     | integer     | A foreign key to the visit in the VISIT table during which the Condition was determined (diagnosed). |
-| condition\_source\_value       | Yes                     | varchar     | The source code for the condition as it appears in the source data. **NOTE**: This may be the ICD9, ICD10, or SNOMED code associated with a visit. |
-| condition\_source\_concept\_id | Yes                     | integer     | The OMOP concept ID that corresponds to the diagnosis code, as indicated in the source data. The query in [condition_source_concept_id.sql](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_source_concept_id.sql) provides an example of how to retrieve the concept id for the ICD9 code `592.0` (Calculus of kidney). |
-
-<http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm:condition_occurrence>
-
-## Notes
- * Conditions that are reported should be discharge diagnosis codes or problem list entries.
- * Not all ICD codes belong in the condition\_occurrence table. For example, ICD-9 CM code `V72.19` (Other examination of ears and hearing) is considered a procedure and thus should be placed in the procedure\_occurrence table.
-
-The following were the diagnosis codes for each of the above visits:
-
-| | |
-|--------------------|----------------------------------------------------------------------------------------|
-| ED                 | Primary: Calculus of kidney (ICD9:592.0) <br> Secondary: Abdominal pain, right low quandrant (ICD9:789.03). Renal Colic (ICD9:788.0) |
-| Both clinic visits | Calculus of ureter (ICD9:592.1)                                                        |
-| Amb Surg           | Calculus of ureter (ICD9:592.1)                                                        |
-
-
-The following were the condition occurrence export:
-
-ED visit
- 
-    "1","1","201620","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00", "44786627","","0","1","592.0","44826732"
-    "2","1","193322","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00","44786629","","0","1","789.03","44836296"
-    "3","1","201690","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00","44786629","","0","1","788.0","44831593"
-
-Clinic visit 
-
-    "4","1","201916","2016-01-01","2016-01-01T16:45:00-05:00","2016-01-01","","44786627","","0","2","592.1","44825543"
-
-Clinic visit 
-
-    "5","1","201916","2016-01-01","2016-01-01T16:45:00-05:00","2016-01-01","","44786627","","0","3","592.1","44825543"
-
-Amb surg visit
-
-    "6","1","201916","2016-01-01","2016-01-01T10:00:00-05:00","2016-01-01","","44786627","","0","4","592.1","44825543"
-
 
 # procedure\_occurrence
 
@@ -209,9 +195,79 @@ Clinic visit
  
     "3","1","40166540","2016-01-01","2016-01-01T03:12:00-05:00","2016-01-01","2016-01-01T03:12:00-05:00","38000177","","3","30","30","","4128794","", "0","","0","2","863669","0","Oral","mg"
 
+# device\_exposure
+
+Field|Required|Type|Description
+:--------------------------------|:--------|:------------|:--------------------------------------------
+|device_exposure_id|Yes|integer|A system-generated unique identifier for each Device Exposure.|
+|person_id|Yes|integer|A foreign key identifier to the Person who is subjected to the Device. The demographic details of that person are stored in the Person table.|
+|device_concept_id|Yes|integer|A foreign key that refers to a Standard Concept identifier in the Standardized Vocabularies for the Device concept.|
+|device_exposure_start_date|Yes|date|The date the Device or supply was applied or used.|
+|device_exposure_start_datetime|No|datetime|The date and time the Device or supply was applied or used.|
+|device_exposure_end_date|No|date|The date the Device or supply was removed from use.|
+|device_exposure_end_datetime|No|datetime|The date and time the Device or supply was removed from use.|
+|device_type_concept_id|Yes|integer|A foreign key to the predefined Concept identifier in the Standardized Vocabularies reflecting the type of Device Exposure recorded. It indicates how the Device Exposure was represented in the source data.|
+|unique_device_id |No|varchar(50)|A UDI or equivalent identifying the instance of the Device used in the Person.|
+|quantity|No|integer|The number of individual Devices used for the exposure.|
+|provider_id|No|integer|A foreign key to the provider in the PROVIDER table who initiated of administered the Device.|
+|visit_occurrence_id|No|integer|A foreign key to the visit in the VISIT table during which the device was used.|
+|device_source_value|No|varchar(50)|The source code for the Device as it appears in the source data. This code is mapped to a standard Device Concept in the Standardized Vocabularies and the original code is stored here for reference.|
+|device_source_ concept_id|No|integer|A foreign key to a Device Concept that refers to the code used in the source.|
+
+# condition\_occurrence
+
+| Field                      | Required For Export     | Type     | Description |
+| -------------------------- | ----------------------- | -------- | ----------- |
+| condition\_occurrence\_id      | Yes                     | integer     | A unique identifier for each Condition Occurrence event. |
+| person\_id                     | Yes                     | integer     | A foreign key identifier to the Person who is experiencing the condition. The demographic details of that Person are stored in the PERSON table. |
+| condition\_concept\_id         | Yes                     | integer     | A standard, valid, OMOP concept ID for the associated domain. The SNOMED terminology is considered standard for the condition domain. It is often derived from the `condition_source_concept_id`. If your source data does not use SNOMED (i.e. in `condition_source_concept_id`) then they need to be translated. The query in [condition_concept_id.sql](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_concept_id.sql) demonstrates how you may go about this. |
+| condition\_start\_date         | Yes                     | date        | The date when the instance of the Condition is recorded. |
+| condition\_start\_datetime     | Yes                     | datetime    | The date and time of the start of the Condition. *See [datetime](index.html#datetime)* |
+| condition\_end\_date           | Yes                     | date        | The date when the instance of the Condition is considered to have ended. |
+| condition\_end\_datetime       | Yes                     | datetime    | The date and time when the instance of the Condition is considered to have ended. *See [datetime](index.html#datetime)* |
+| condition\_type\_concept\_id   | Yes                     | integer     | Refer to [condition_type_concept_id.csv](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_type_concept_id.csv) for the list of allowed concept_ids. |
+| stop\_reason                   | No                      | varchar(20) | The reason that the condition was no longer present, as indicated in the source data. |
+| provider\_id                   | No                      | integer     | Set to 0 for this data sprint. |
+| visit\_occurrence\_id          | Yes                     | integer     | A foreign key to the visit in the VISIT table during which the Condition was determined (diagnosed). |
+| condition\_source\_value       | Yes                     | varchar     | The source code for the condition as it appears in the source data. **NOTE**: This may be the ICD9, ICD10, or SNOMED code associated with a visit. |
+| condition\_source\_concept\_id | Yes                     | integer     | The OMOP concept ID that corresponds to the diagnosis code, as indicated in the source data. The query in [condition_source_concept_id.sql](https://github.com/cumc-dbmi/pmi_sprint_reporter/blob/master/resources/valid_concepts/condition_occurrence/condition_source_concept_id.sql) provides an example of how to retrieve the concept id for the ICD9 code `592.0` (Calculus of kidney). |
+
+<http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm:condition_occurrence>
+
+## Notes
+ * Conditions that are reported should be discharge diagnosis codes or problem list entries.
+ * Not all ICD codes belong in the condition\_occurrence table. For example, ICD-9 CM code `V72.19` (Other examination of ears and hearing) is considered a procedure and thus should be placed in the procedure\_occurrence table.
+
+The following were the diagnosis codes for each of the above visits:
+
+| | |
+|--------------------|----------------------------------------------------------------------------------------|
+| ED                 | Primary: Calculus of kidney (ICD9:592.0) <br> Secondary: Abdominal pain, right low quandrant (ICD9:789.03). Renal Colic (ICD9:788.0) |
+| Both clinic visits | Calculus of ureter (ICD9:592.1)                                                        |
+| Amb Surg           | Calculus of ureter (ICD9:592.1)                                                        |
+
+
+The following were the condition occurrence export:
+
+ED visit
+ 
+    "1","1","201620","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00", "44786627","","0","1","592.0","44826732"
+    "2","1","193322","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00","44786629","","0","1","789.03","44836296"
+    "3","1","201690","2016-01-01", "2016-01-01T03:12:00-05:00", "2016-01-01", "2016-01-01T03:12:00-05:00","44786629","","0","1","788.0","44831593"
+
+Clinic visit 
+
+    "4","1","201916","2016-01-01","2016-01-01T16:45:00-05:00","2016-01-01","","44786627","","0","2","592.1","44825543"
+
+Clinic visit 
+
+    "5","1","201916","2016-01-01","2016-01-01T16:45:00-05:00","2016-01-01","","44786627","","0","3","592.1","44825543"
+
+Amb surg visit
+
+    "6","1","201916","2016-01-01","2016-01-01T10:00:00-05:00","2016-01-01","","44786627","","0","4","592.1","44825543"
 
 # measurement
-
 
 | Field                      | Required For Export     | Type     | Description |
 | -------------------------- | ----------------------- | -------- | ----------- |
@@ -275,5 +331,27 @@ ED visit (Gluc)
 ED visit (Ca) 
 
     "8","1","3006906","2016-01-01","2016-01-01T04:25:00-05:00","44818702","0","9.4","0","8840","","","0","1","17861-6","3006906","mg/dl","9.4"
+
+# observation
+
+Field|Required|Type|Description
+:----------------------------------|:--------|:------------|:------------------------------------
+|observation_id|Yes|integer|A unique identifier for each observation.|
+|person_id|Yes|integer|A foreign key identifier to the Person about whom the observation was recorded. The demographic details of that Person are stored in the PERSON table.|
+|observation_concept_id|Yes|integer|A foreign key to the standard observation concept identifier in the Standardized Vocabularies.|
+|observation_date|Yes|date|The date of the observation.|
+|observation_datetime|No|datetime|The date and time of the observation.|
+|observation_type_concept_id|Yes|integer|A foreign key to the predefined concept identifier in the Standardized Vocabularies reflecting the type of the observation.|
+|value_as_number|No|float|The observation result stored as a number. This is applicable to observations where the result is expressed as a numeric value.|
+|value_as_string|No|varchar(60)|The observation result stored as a string. This is applicable to observations where the result is expressed as verbatim text.|
+|value_as_concept_id|No|Integer|A foreign key to an observation result stored as a Concept ID. This is applicable to observations where the result can be expressed as a Standard Concept from the Standardized Vocabularies (e.g., positive/negative, present/absent, low/high, etc.).|
+|qualifier_concept_id|No|integer|A foreign key to a Standard Concept ID for a qualifier (e.g., severity of drug-drug interaction alert)|
+|unit_concept_id|No|integer|A foreign key to a Standard Concept ID of measurement units in the Standardized Vocabularies.|
+|provider_id|No|integer|A foreign key to the provider in the PROVIDER table who was responsible for making the observation.|
+|visit_occurrence_id|No|integer|A foreign key to the visit in the VISIT_OCCURRENCE table during which the observation was recorded.|
+|observation_source_value|No|varchar(50)|The observation code as it appears in the source data. This code is mapped to a Standard Concept in the Standardized Vocabularies and the original code is, stored here for reference.|
+|observation_source_concept_id|No|integer|A foreign key to a Concept that refers to the code used in the source.|
+|unit_source_value|No|varchar(50)|The source code for the unit as it appears in the source data. This code is mapped to a standard unit concept in the Standardized Vocabularies and the original code is, stored here for reference.|
+|qualifier_source_value|No|varchar(50)|The source value associated with a qualifier to characterize the observation|
 
 [Proceed to File Transfer Procedures >>](file_transfer_procedures.md)
